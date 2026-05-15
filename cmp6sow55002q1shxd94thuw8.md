@@ -542,6 +542,4 @@ So you can:
 
 That was all. Thanks for reading so far. You can also subscribe to my newsletter visiting the following link:
 
-\[!\[Subscribe on Substack\]([https://substack.com)\](https://substack.com)](https://substack.com\)]\(https://substack.com\))
-
-[Abu Bakar's Substack](http://abubakardevs.substack.com/)
+👉 [Abu Bakar's Substack](http://abubakardevs.substack.com/)
