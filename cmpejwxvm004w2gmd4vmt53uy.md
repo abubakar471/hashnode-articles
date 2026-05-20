@@ -146,7 +146,7 @@ how you approach problems.
 
 There’s a scene in the movie **"The Imitation Game"** where candidates were given a difficult problem to solve under a time limit.
 
-The goal wasn’t only solving the problem.
+The goal wasn’t solving the problem.
 
 It was observing:
 
