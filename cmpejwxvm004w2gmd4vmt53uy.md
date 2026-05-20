@@ -49,7 +49,7 @@ And before someone gets emotional, no, this is not an anti-AI article.
 
 I use AI daily.
 
-GitHub Copilot, ChatGPT, Claude — these tools are insanely useful.
+GitHub Copilot, ChatGPT, Claude, etc, these tools are insanely useful.
 
 But some developers are no longer using AI as an assistant.
 
