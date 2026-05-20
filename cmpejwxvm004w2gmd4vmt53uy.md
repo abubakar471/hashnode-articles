@@ -257,6 +257,20 @@ A very powerful one.
 
 And engineers who understand their tools always outperform people blindly pressing buttons.
 
+And yes, the fear is not completely imaginary either.
+
+Tech layoffs are real.
+
+According to multiple industry layoff trackers, hundreds of thousands of tech jobs were cut between 2023–2025 as companies restructured around efficiency and AI-focused strategies.
+
+But something interesting also started happening quietly.
+
+Some companies that aggressively pushed AI-first restructuring started rehiring experienced engineers again after realizing productivity and maintenance are not the same thing.
+
+Because generating code is one thing.
+
+Maintaining large systems reliably in production is whole different game.
+
 * * *
 
 ## **The Pre-AI Debugging Era Was Something Else...**
