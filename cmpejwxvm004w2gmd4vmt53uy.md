@@ -257,7 +257,7 @@ A very powerful one.
 
 And engineers who understand their tools always outperform people blindly pressing buttons.
 
-And yes, the fear is not completely imaginary either.
+Also, the fear is not completely imaginary either.
 
 Tech layoffs are real.
 
