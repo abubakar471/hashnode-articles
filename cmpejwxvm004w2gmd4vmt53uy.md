@@ -194,7 +194,7 @@ That’s where real growth happens.
 
 Now let’s talk about the actual thing sitting quietly in people’s minds.
 
-“AI is going to replace developers.”
+***“AI is going to replace developers.”***
 
 Maybe.
 
