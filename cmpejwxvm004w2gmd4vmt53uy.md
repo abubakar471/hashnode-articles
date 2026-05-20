@@ -5,6 +5,7 @@ seoDescription: "Developers are panicking about AI replacing them, yet half of t
 datePublished: 2026-05-20T21:05:44.581Z
 cuid: cmpejwxvm004w2gmd4vmt53uy
 slug: software-engineers-ain-t-engineering-anymore
+cover: https://cdn.hashnode.com/uploads/covers/69031e029c8c3e68582a8acc/91b8f02e-0601-4059-9201-9566baa7f631.jpg
 ogImage: https://cdn.hashnode.com/uploads/og-images/69031e029c8c3e68582a8acc/9abf3f4a-fe24-45ee-8181-8642b4a3bb5e.jpg
 tags: software-development, software-engineering
 
