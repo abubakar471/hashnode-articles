@@ -259,7 +259,7 @@ And engineers who understand their tools always outperform people blindly pressi
 
 * * *
 
-## The Pre-AI Debugging Era Was Basically War
+## **The Pre-AI Debugging Era Was Something Else...**
 
 People who started coding after AI assistants genuinely missed a different era of development.
 
