@@ -62,7 +62,7 @@ In this folder, create a nvim folder and inside that folder create a init.vim fi
 ```plaintext
 " ====================================================================
 " NEOVIM CONFIG (Windows Compatible & Optimized)
-" Rosé Pine Theme, Telescope, Bufferline, & Live Inline Diagnostics
+" Everforest Theme, Splits, Telescope, Bufferline, & Live Inline Diagnostics
 " ====================================================================
 
 set nocompatible
@@ -97,6 +97,8 @@ endif
 set scrolloff=8
 set sidescrolloff=8
 set signcolumn=yes
+" Blank space past end of buffer (keep trailing space after eob:\)
+set fillchars+=eob:\ 
 set updatetime=250
 set shortmess+=c
 
@@ -114,8 +116,8 @@ set clipboard=unnamedplus
 " =========================
 call plug#begin(stdpath('data') . '/plugged')
 
-" UI & Theme (Rosé Pine)
-Plug 'rose-pine/neovim', { 'as': 'rose-pine' }
+" UI & Theme (Everforest)
+Plug 'sainnhe/everforest'
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'akinsho/bufferline.nvim'
 Plug 'nvim-tree/nvim-tree.lua'
@@ -134,7 +136,20 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 call plug#end()
 
 " =========================
-" 🎨 THEME & LUA CONFIG
+" 🎨 EVERFOREST THEME SETTINGS
+" =========================
+set background=dark
+let g:everforest_background = 'medium'      " Options: 'soft', 'medium', 'hard'
+let g:everforest_transparent_background = 2   " 0 = opaque, 1 = main bg transparent, 2 = include floating/popup bg
+let g:everforest_better_performance = 1
+let g:everforest_diagnostic_text_highlight = 1
+let g:everforest_diagnostic_line_highlight = 0
+let g:everforest_diagnostic_virtual_text = 'colored'
+
+colorscheme everforest
+
+" =========================
+" 🎨 LUA CONFIG
 " =========================
 lua << EOF
 -- 0. Guard for older/newer Treesitter ft_to_lang lookups used by plugins
@@ -144,78 +159,52 @@ if vim.treesitter and not vim.treesitter.ft_to_lang and vim.treesitter.language 
     end
 end
 
--- 1. Setup Rosé Pine Theme (Main Variant + Windows Terminal Transparency)
-local status_rp, rose_pine = pcall(require, "rose-pine")
-if status_rp then
-    rose_pine.setup({
-        variant = "main",      -- Options: "main", "moon", "dawn"
-        dark_variant = "main",
-        dim_inactive_windows = false,
-        extend_background_behind_borders = true,
-        enable = {
-            terminal = true,
-            legacy_highlights = true,
-            migrations = true,
-        },
-        styles = {
-            bold = true,
-            italic = true,
-            transparency = true,
-        },
-        highlight_groups = {
-            -- Keep floating windows & sidebars clean over Windows Terminal transparency
-            NormalFloat = { bg = "none" },
-            FloatBorder = { fg = "muted", bg = "none" },
-            NvimTreeNormal = { bg = "none" },
-            NvimTreeNormalNC = { bg = "none" },
-            EndOfBuffer = { bg = "none" },
-            SignColumn = { bg = "none" },
-
-            -- Telescope clean transparent borders
-            TelescopeBorder = { fg = "highlight_high", bg = "none" },
-            TelescopeNormal = { bg = "none" },
-            TelescopePromptNormal = { bg = "base" },
-            TelescopeResultsNormal = { fg = "subtle", bg = "none" },
-            TelescopeSelection = { fg = "text", bg = "base" },
-            TelescopeSelectionCaret = { fg = "rose", bg = "rose" },
-
-            -- Primeagen-style live inline diagnostics (Rosé Pine palette)
-            CocErrorVirtualText   = { fg = "#eb6f92", bg = "none", bold = true },
-            CocWarningVirtualText = { fg = "#f6c177", bg = "none", italic = true },
-            CocInfoVirtualText    = { fg = "#9ccfd8", bg = "none", italic = true },
-            CocHintVirtualText    = { fg = "#c4a7e7", bg = "none", italic = true },
-
-            CocErrorHighlight     = { sp = "#eb6f92", undercurl = true },
-            CocWarningHighlight   = { sp = "#f6c177", undercurl = true },
-            CocErrorSign          = { fg = "#eb6f92", bg = "none", bold = true },
-            CocWarningSign        = { fg = "#f6c177", bg = "none", bold = true },
-        },
-    })
+-- Keep splits, floating windows, and gutters transparent over Windows Terminal
+local transparent_groups = {
+    "Normal",
+    "NormalNC",
+    "NormalFloat",
+    "FloatBorder",
+    "NvimTreeNormal",
+    "NvimTreeNormalNC",
+    "EndOfBuffer",
+    "SignColumn",
+}
+for _, group in ipairs(transparent_groups) do
+    vim.api.nvim_set_hl(0, group, { bg = "none" })
 end
-vim.cmd('colorscheme rose-pine')
 
--- 2. Setup Lualine
+-- Dim or hide the vertical border line between NvimTree and split windows
+-- To hide it completely instead of dimming, change fg to "#1e2220" or add `set fillchars+=vert:\ `
+vim.api.nvim_set_hl(0, "WinSeparator", { fg = "#1d201f", bg = "none", nocombine = true })
+vim.api.nvim_set_hl(0, "VertSplit",    { fg = "#1d201f", bg = "none", nocombine = true })
+
+-- Primeagen-style live inline diagnostics (Everforest palette)
+vim.api.nvim_set_hl(0, "CocErrorVirtualText",   { fg = "#e67e80", bg = "none", bold = true })
+vim.api.nvim_set_hl(0, "CocWarningVirtualText", { fg = "#dbbc7f", bg = "none", italic = true })
+vim.api.nvim_set_hl(0, "CocInfoVirtualText",    { fg = "#7fbbb3", bg = "none", italic = true })
+vim.api.nvim_set_hl(0, "CocHintVirtualText",    { fg = "#a7c080", bg = "none", italic = true })
+
+vim.api.nvim_set_hl(0, "CocErrorHighlight",     { sp = "#e67e80", undercurl = true })
+vim.api.nvim_set_hl(0, "CocWarningHighlight",   { sp = "#dbbc7f", undercurl = true })
+vim.api.nvim_set_hl(0, "CocErrorSign",          { fg = "#e67e80", bg = "none", bold = true })
+vim.api.nvim_set_hl(0, "CocWarningSign",        { fg = "#dbbc7f", bg = "none", bold = true })
+
+-- 1. Setup Lualine
 local status_lualine, lualine = pcall(require, "lualine")
 if status_lualine then
     lualine.setup({
         options = {
-            theme = "rose-pine",
+            theme = "everforest",
             globalstatus = true
         }
     })
 end
 
--- 3. UI Components (Bufferline & Nvim-Tree)
+-- 2. UI Components (Bufferline & Nvim-Tree)
 local status_bufferline, bufferline = pcall(require, "bufferline")
 if status_bufferline then
-    local rp_highlights = {}
-    local ok_rp_bl, rp_bl = pcall(require, "rose-pine.plugins.bufferline")
-    if ok_rp_bl then
-        rp_highlights = rp_bl
-    end
-
     bufferline.setup({
-        highlights = rp_highlights,
         options = {
             mode = "buffers",
             numbers = "ordinal",
@@ -232,7 +221,7 @@ if status_tree then
     nvim_tree.setup({})
 end
 
--- 4. ToggleTerm (Controlled via Ctrl+/ and Ctrl+_ mappings below)
+-- 3. ToggleTerm (Controlled via Ctrl+/ and Ctrl+_ mappings below)
 local status_term, toggleterm = pcall(require, "toggleterm")
 if status_term then
     toggleterm.setup({
@@ -249,7 +238,7 @@ if status_term then
     })
 end
 
--- 5. Telescope (Disable TS previewer highlight to prevent nvim-treesitter clashes)
+-- 4. Telescope (Disable TS previewer highlight to prevent nvim-treesitter clashes)
 local status_telescope, telescope = pcall(require, "telescope")
 if status_telescope then
     telescope.setup({
@@ -269,7 +258,7 @@ if status_telescope then
     pcall(telescope.load_extension, "fzf")
 end
 
--- 6. Treesitter (Safe setup for both legacy configs and newer nvim-treesitter)
+-- 5. Treesitter (Safe setup for both legacy configs and newer nvim-treesitter)
 local status_ts_install, ts_install = pcall(require, "nvim-treesitter.install")
 if status_ts_install then
     ts_install.prefer_git = false
@@ -339,6 +328,17 @@ autocmd BufWritePre * silent! call CocAction('format')
 
 " Sidebar Tree Toggle
 nnoremap <leader>e :NvimTreeToggle<CR>
+
+" ==========================================================
+" 🗂️ SPLIT VIEW MANAGEMENT
+" ==========================================================
+nnoremap <leader>sv :vsplit<CR>
+nnoremap <leader>sh :split<CR>
+nnoremap <leader>sb :vsplit<CR>:bnext<CR>
+nnoremap <leader>sc :close<CR>
+nnoremap <leader>s= <C-w>=
+nnoremap <leader>s> :vertical resize +5<CR>
+nnoremap <leader>s< :vertical resize -5<CR>
 
 " ==========================================================
 " 📑 PROFESSIONAL TAB & BUFFER NAVIGATION
