@@ -17,7 +17,7 @@ Neovim is a fork of Vim that offers a modern, faster codebase with first-class L
 
 Install [Node.js LTS version](https://nodejs.org/en/download) as some of the plugins will need this.
 
-* * *
+---
 
 ## **Step 1: Install Neovim on Windows**
 
@@ -49,7 +49,7 @@ Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-
 Repair-WinGetPackageManager
 ```
 
-* * *
+---
 
 ## **Step 2: Creating the vim configuration file**
 
@@ -61,8 +61,8 @@ In this folder, create a nvim folder and inside that folder create a init.vim fi
 
 ```plaintext
 " ====================================================================
-" NEOVIM CONFIG
-" Solarized Osaka UI, Telescope Integration, & Absolute Exit Logic
+" NEOVIM CONFIG (Windows Compatible & Optimized)
+" Rosé Pine Theme, Telescope, Bufferline, & Live Inline Diagnostics
 " ====================================================================
 
 set nocompatible
@@ -79,21 +79,25 @@ set hidden
 set nobackup
 set nowritebackup
 set autowrite
-set autowriteall 
+set autowriteall
 
 let mapleader=" "
 
-" Windows-specific Shell Fix
-set shell=powershell
-set shellcmdflag=-NoLogo\ -NoProfile\ -ExecutionPolicy\ RemoteSigned\ -Command
-set shellquote=
-set shellxquote=
+" --- WINDOWS-SPECIFIC SHELL FIX (Complete) ---
+if has('win32') || has('win64')
+    set shell=powershell
+    set shellcmdflag=-NoLogo\ -NoProfile\ -ExecutionPolicy\ RemoteSigned\ -Command\ [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;
+    set shellredir=-RedirectStandardOutput\ %s\ -NoNewWindow\ -Wait
+    set shellpipe=2>&1\ \|\ Out-File\ -Encoding\ UTF8\ %s;\ exit\ $LastExitCode
+    set shellquote=
+    set shellxquote=
+endif
 
 " UX Improvements
 set scrolloff=8
 set sidescrolloff=8
-set signcolumn=yes 
-set updatetime=300
+set signcolumn=yes
+set updatetime=250
 set shortmess+=c
 
 " Indentation
@@ -102,16 +106,16 @@ set shiftwidth=4
 set expandtab
 set smartindent
 
-" Clipboard
+" Clipboard (Uses Windows win32yank / native clipboard automatically)
 set clipboard=unnamedplus
 
 " =========================
 " 🔌 PLUGINS
 " =========================
-call plug#begin()
+call plug#begin(stdpath('data') . '/plugged')
 
-" UI & Theme (Solarized Osaka Vibe)
-Plug 'craftzdog/solarized-osaka.nvim'
+" UI & Theme (Rosé Pine)
+Plug 'rose-pine/neovim', { 'as': 'rose-pine' }
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'akinsho/bufferline.nvim'
 Plug 'nvim-tree/nvim-tree.lua'
@@ -121,7 +125,7 @@ Plug 'akinsho/toggleterm.nvim'
 " Telescope (File Finder & UI)
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.x' }
-Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
+Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
 
 " Syntax & Smart Suggestions
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
@@ -133,90 +137,174 @@ call plug#end()
 " 🎨 THEME & LUA CONFIG
 " =========================
 lua << EOF
--- 1. Setup Solarized Osaka
-local status_osaka, osaka = pcall(require, "solarized-osaka")
-if status_osaka then
-    osaka.setup({
-        transparent = true, 
-        terminal_colors = true,
-        styles = {
-            comments = { italic = true },
-            keywords = { italic = true },
-            functions = { bold = true },
-            variables = { italic = true },
+-- 0. Guard for older/newer Treesitter ft_to_lang lookups used by plugins
+if vim.treesitter and not vim.treesitter.ft_to_lang and vim.treesitter.language then
+    vim.treesitter.ft_to_lang = function(ft)
+        return vim.treesitter.language.get_lang(ft) or ft
+    end
+end
+
+-- 1. Setup Rosé Pine Theme (Main Variant + Windows Terminal Transparency)
+local status_rp, rose_pine = pcall(require, "rose-pine")
+if status_rp then
+    rose_pine.setup({
+        variant = "main",      -- Options: "main", "moon", "dawn"
+        dark_variant = "main",
+        dim_inactive_windows = false,
+        extend_background_behind_borders = true,
+        enable = {
+            terminal = true,
+            legacy_highlights = true,
+            migrations = true,
         },
-        sidebars = { "qf", "help", "nvim-tree" },
-        day_brightness = 0.3,
+        styles = {
+            bold = true,
+            italic = true,
+            transparency = true,
+        },
+        highlight_groups = {
+            -- Keep floating windows & sidebars clean over Windows Terminal transparency
+            NormalFloat = { bg = "none" },
+            FloatBorder = { fg = "muted", bg = "none" },
+            NvimTreeNormal = { bg = "none" },
+            NvimTreeNormalNC = { bg = "none" },
+            EndOfBuffer = { bg = "none" },
+            SignColumn = { bg = "none" },
+
+            -- Telescope clean transparent borders
+            TelescopeBorder = { fg = "highlight_high", bg = "none" },
+            TelescopeNormal = { bg = "none" },
+            TelescopePromptNormal = { bg = "base" },
+            TelescopeResultsNormal = { fg = "subtle", bg = "none" },
+            TelescopeSelection = { fg = "text", bg = "base" },
+            TelescopeSelectionCaret = { fg = "rose", bg = "rose" },
+
+            -- Primeagen-style live inline diagnostics (Rosé Pine palette)
+            CocErrorVirtualText   = { fg = "#eb6f92", bg = "none", bold = true },
+            CocWarningVirtualText = { fg = "#f6c177", bg = "none", italic = true },
+            CocInfoVirtualText    = { fg = "#9ccfd8", bg = "none", italic = true },
+            CocHintVirtualText    = { fg = "#c4a7e7", bg = "none", italic = true },
+
+            CocErrorHighlight     = { sp = "#eb6f92", undercurl = true },
+            CocWarningHighlight   = { sp = "#f6c177", undercurl = true },
+            CocErrorSign          = { fg = "#eb6f92", bg = "none", bold = true },
+            CocWarningSign        = { fg = "#f6c177", bg = "none", bold = true },
+        },
     })
 end
-vim.cmd('colorscheme solarized-osaka')
+vim.cmd('colorscheme rose-pine')
 
 -- 2. Setup Lualine
-require('lualine').setup({ 
-    options = { 
-        theme = "solarized-osaka", 
-        globalstatus = true 
-    }
-})
+local status_lualine, lualine = pcall(require, "lualine")
+if status_lualine then
+    lualine.setup({
+        options = {
+            theme = "rose-pine",
+            globalstatus = true
+        }
+    })
+end
 
--- 3. UI Components
-require("bufferline").setup{}
-require("nvim-tree").setup{}
+-- 3. UI Components (Bufferline & Nvim-Tree)
+local status_bufferline, bufferline = pcall(require, "bufferline")
+if status_bufferline then
+    local rp_highlights = {}
+    local ok_rp_bl, rp_bl = pcall(require, "rose-pine.plugins.bufferline")
+    if ok_rp_bl then
+        rp_highlights = rp_bl
+    end
 
--- 4. ToggleTerm
-require("toggleterm").setup({
-    open_mapping = [[<c-\>]],
-    direction = "horizontal",
-    size = 15,
-    insert_mappings = true,
-    terminal_mappings = true,
-    start_in_insert = true,
-    on_open = function(term)
-        vim.cmd("startinsert!")
-        vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", {noremap = true, silent = true})
-    end,
-})
+    bufferline.setup({
+        highlights = rp_highlights,
+        options = {
+            mode = "buffers",
+            numbers = "ordinal",
+            diagnostics = "coc",
+            separator_style = "slant",
+            show_buffer_close_icons = true,
+            show_close_icon = false,
+        }
+    })
+end
 
--- 5. Telescope (Beautiful Floating UI)
-require('telescope').setup({
-  defaults = {
-    layout_strategy = "horizontal",
-    layout_config = {
-      prompt_position = "top",
-      preview_width = 0.55,
-    },
-    sorting_strategy = "ascending",
-    winblend = 10,
-    borderchars = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-  }
-})
-pcall(require('telescope').load_extension, 'fzf')
+local status_tree, nvim_tree = pcall(require, "nvim-tree")
+if status_tree then
+    nvim_tree.setup({})
+end
 
--- 6. Treesitter
-local status_ts, ts = pcall(require, "nvim-treesitter.configs")
-if status_ts then
-    ts.setup({
+-- 4. ToggleTerm (Controlled via Ctrl+/ and Ctrl+_ mappings below)
+local status_term, toggleterm = pcall(require, "toggleterm")
+if status_term then
+    toggleterm.setup({
+        shell = "C:/PROGRA~1/Git/bin/bash.exe --login -i",
+        direction = "horizontal",
+        size = 15,
+        insert_mappings = true,
+        terminal_mappings = true,
+        start_in_insert = true,
+        on_open = function(term)
+            vim.cmd("startinsert!")
+            vim.api.nvim_buf_set_keymap(term.bufnr, "n", "q", "<cmd>close<CR>", { noremap = true, silent = true })
+        end,
+    })
+end
+
+-- 5. Telescope (Disable TS previewer highlight to prevent nvim-treesitter clashes)
+local status_telescope, telescope = pcall(require, "telescope")
+if status_telescope then
+    telescope.setup({
+        defaults = {
+            layout_strategy = "horizontal",
+            layout_config = {
+                prompt_position = "top",
+                preview_width = 0.55,
+            },
+            sorting_strategy = "ascending",
+            winblend = 15,
+            preview = {
+                treesitter = false,
+            },
+        }
+    })
+    pcall(telescope.load_extension, "fzf")
+end
+
+-- 6. Treesitter (Safe setup for both legacy configs and newer nvim-treesitter)
+local status_ts_install, ts_install = pcall(require, "nvim-treesitter.install")
+if status_ts_install then
+    ts_install.prefer_git = false
+    ts_install.compilers = { "zig", "clang", "gcc", "cl" }
+end
+
+local status_ts_configs, ts_configs = pcall(require, "nvim-treesitter.configs")
+if status_ts_configs then
+    ts_configs.setup({
         ensure_installed = { "lua", "python", "javascript", "typescript", "cpp", "java" },
         highlight = { enable = true },
+    })
+elseif vim.treesitter and vim.treesitter.start then
+    vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "lua", "python", "javascript", "typescript", "cpp", "java" },
+        callback = function(args)
+            pcall(vim.treesitter.start, args.buf)
+        end,
     })
 end
 EOF
 
-" Transparency Fix
-function! AdaptColorscheme()
-   highlight Normal guibg=NONE ctermbg=NONE
-   highlight NonText guibg=NONE ctermbg=NONE
-   highlight SignColumn guibg=NONE ctermbg=NONE
-   highlight EndOfBuffer guibg=NONE ctermbg=NONE
-endfunction
-autocmd ColorScheme * call AdaptColorscheme()
-doautocmd ColorScheme solarized-osaka
+" =========================
+" 💾 AUTO-SAVE ON SWITCH
+" =========================
+augroup AutoSaveOnSwitch
+    autocmd!
+    autocmd BufLeave,FocusLost * silent! wa
+augroup END
 
 " =========================
-" 🧠 SMART CODE SUGGESTIONS (COC)
+" 🧠 SMART CODE SUGGESTIONS & DIAGNOSTICS (COC)
 " =========================
 inoremap <silent><expr> <TAB> coc#pum#visible() ? coc#pum#next(1) : CheckBackspace() ? "\<Tab>" : coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+inoremap <silent><expr> <S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
@@ -227,6 +315,7 @@ nmap <silent> [g <Plug>(coc-diagnostic-prev)
 nmap <silent> ]g <Plug>(coc-diagnostic-next)
 nmap <silent> gd <Plug>(coc-definition)
 nnoremap <silent> K :call ShowDocumentation()<CR>
+nnoremap <silent> <leader>d :CocList diagnostics<CR>
 
 function! ShowDocumentation()
   if CocAction('hasProvider', 'hover') | call CocActionAsync('doHover')
@@ -244,17 +333,35 @@ nnoremap <leader>ff <cmd>Telescope find_files<cr>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 
-" Auto-format on save
+" Manual & Auto-format
 nnoremap <leader>f :call CocAction('format')<CR>
 autocmd BufWritePre * silent! call CocAction('format')
 
-" Sidebar
+" Sidebar Tree Toggle
 nnoremap <leader>e :NvimTreeToggle<CR>
 
-" Buffer Nav
-nnoremap <A-j> :bnext<CR>
-nnoremap <A-k> :bprevious<CR>
+" ==========================================================
+" 📑 PROFESSIONAL TAB & BUFFER NAVIGATION
+" ==========================================================
+nnoremap <TAB> :bnext<CR>
+nnoremap <S-TAB> :bprevious<CR>
+nnoremap <S-l> :bnext<CR>
+nnoremap <S-h> :bprevious<CR>
+
+" Clean buffer close
+nnoremap <leader>x :bdelete<CR>
 nnoremap <leader>q :bd<CR>
+
+" Jump directly to tabs 1-9
+nnoremap <leader>1 <Cmd>BufferLineGoToBuffer 1<CR>
+nnoremap <leader>2 <Cmd>BufferLineGoToBuffer 2<CR>
+nnoremap <leader>3 <Cmd>BufferLineGoToBuffer 3<CR>
+nnoremap <leader>4 <Cmd>BufferLineGoToBuffer 4<CR>
+nnoremap <leader>5 <Cmd>BufferLineGoToBuffer 5<CR>
+nnoremap <leader>6 <Cmd>BufferLineGoToBuffer 6<CR>
+nnoremap <leader>7 <Cmd>BufferLineGoToBuffer 7<CR>
+nnoremap <leader>8 <Cmd>BufferLineGoToBuffer 8<CR>
+nnoremap <leader>9 <Cmd>BufferLineGoToBuffer $<CR>
 
 " 💾 SMART SAVE & ABSOLUTE QUIT
 nnoremap <C-s> :wa<CR>
@@ -264,15 +371,23 @@ vnoremap <C-s> <Esc>:wa<CR>gv
 nnoremap <leader>w :wa<CR>:qa<CR>
 nnoremap <leader>Q :qa!<CR>
 
-" Command Abbreviations
 cnoreabbrev q qa
 cnoreabbrev wq wqa
 
-" 🧭 WINDOW NAVIGATION
+" 🧭 WINDOW NAVIGATION & TERMINAL MAPPINGS
 nnoremap <A-Left> <C-w>h
 nnoremap <A-Right> <C-w>l
 nnoremap <A-Up> <C-w>k
 nnoremap <A-Down> <C-w>j
+
+" Toggle terminal with Ctrl+/ (plus <C-_> fallback for Windows Terminal)
+nnoremap <C-/> <cmd>ToggleTerm<CR>
+inoremap <C-/> <Esc><cmd>ToggleTerm<CR>
+tnoremap <C-/> <C-\><C-n><cmd>ToggleTerm<CR>
+
+nnoremap <C-_> <cmd>ToggleTerm<CR>
+inoremap <C-_> <Esc><cmd>ToggleTerm<CR>
+tnoremap <C-_> <C-\><C-n><cmd>ToggleTerm<CR>
 
 tnoremap <A-Left> <C-\><C-n><C-w>h
 tnoremap <A-Right> <C-\><C-n><C-w>l
@@ -281,13 +396,13 @@ tnoremap <A-Down> <C-\><C-n><C-w>j
 tnoremap <Esc> <C-\><C-n>
 ```
 
-* * *
+---
 
 ## **Step 3: How to Fix Terminal Errors on Windows**
 
 Now, open the powershell and install the vim-plug this is needed as it is a plugin manager for neovim.
 
-Goto the [https://github.com/junegunn/vim-plug](https://github.com/junegunn/vim-plug) and see the installation command for windows. After you have installed the vim-plug now it is time to install
+Goto the <https://github.com/junegunn/vim-plug> and see the installation command for windows. After you have installed the vim-plug now it is time to install
 
 Now, open the powershell and type
 
@@ -309,7 +424,7 @@ TSUpdate
 
 This will install all the necessary plugins mentioned in your inti.vim configuration file. Once installed you can close the powershell and open again to just restart neovim in a fresh state.
 
-* * *
+---
 
 ## **Step 4: Add Language support and Autocompletion**
 
@@ -318,6 +433,20 @@ Once you open neovim again type ( : ) and run this command
 ```plaintext
 CocInstall coc-pyright coc-tsserver coc-lua coc-java coc-json coc-html coc-css coc-clangd coc-snippets
 ```
+
+#### (Optional): if you are using c++, you might need to do this step:
+
+Instatall clangd globally in your windows machine:
+
+### Install LLVM/`clangd` Externally and Point `coc-clangd` to It
+
+**Install LLVM (includes** `clangd.exe`**) via PowerShell / Windows Terminal:** Run:
+
+```plaintext
+winget install -e --id LLVM.LLVM
+```
+
+*(If you already have MSYS2/MinGW installed, you can install* `clangd` *there instead, e.g.,* `pacman -S mingw-w64-ucrt-x86_64-clang-tools-extra`*.)Verification:* Open a **new** PowerShell window and run `clangd --version` (or check that `C:\Program Files\LLVM\bin\clangd.exe` exists).
 
 This will install language support for popular languages. After that close neovim open it again. and type : and run the below command
 
@@ -329,37 +458,27 @@ A config file will open paste the below config there, and save by going into the
 
 ```json
 {
-    "suggest.noselect": false,
-    "suggest.enablePreview": true,
-    "suggest.triggerAfterInsertEnter": true,
-    "suggest.minTriggerInputLength": 1,
-    "languageserver": {
-        "clangd": {
-            "command": "clangd",
-            "rootPatterns": [
-                "compile_flags.txt",
-                "compile_commands.json",
-                ".git/",
-                ".clangd"
-            ],
-            "filetypes": [
-                "c",
-                "cc",
-                "cpp",
-                "objc",
-                "objcpp"
-            ],
-            "args": [
-                "--query-driver=C:/msys64/ucrt64/bin/g++.exe",
-                "--background-index",
-                "--clang-tidy",
-                "--header-insertion=never"
-            ]
-        }
-    },
-    "clangd.arguments": [
-        "--query-driver=C:/msys64/ucrt64/bin/g++.exe"
-    ]
+  "json.schemaDownload.trustedDomains": {
+    "https://www.schemastore.org": true
+  },
+  "diagnostic.enable": true,
+  "diagnostic.refreshOnInsertMode": true,
+  "diagnostic.checkCurrentLine": true,
+  "diagnostic.virtualText": true,
+  "diagnostic.virtualTextCurrentLineOnly": false,
+  "diagnostic.virtualTextPrefix": " ■■■ ",
+  "diagnostic.virtualTextLimitInOneLine": 80,
+  "diagnostic.messageTarget": "float",
+  "diagnostic.autoRefresh": true,
+  "clangd.path": "C:/Program Files/LLVM/bin/clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=never"
+  ],
+  "clangd.fallbackFlags": [
+    "-std=c++20"
+  ]
 }
 ```
 
@@ -367,7 +486,7 @@ After you save the file, close neovim and reopen.
 
 Now, you will see all the issues and errors are gone you can now use neovim with a more optimized features. Your Neovim is now ready to use.
 
-* * *
+---
 
 ## **Looking for more aesthetic look?**
 
@@ -379,18 +498,15 @@ Open your powershell and press (Ctrl + , ) key it will open up the powershell se
 
 There choose the profile powershell > Appearance
 
-1.  Set the Transparency to 72%
-    
-2.  Enable acrylic material
-    
-3.  Set the font face to “JetBrainsMono Nerd Font” (Make sure to install the font first)
-    
+1. Set the Transparency to 72%
+2. Enable acrylic material
+3. Set the font face to “JetBrainsMono Nerd Font” (Make sure to install the font first)
 
 You will get a final look like this :
 
 ![](https://cdn.hashnode.com/uploads/covers/69031e029c8c3e68582a8acc/c44f6d0e-723d-4ba6-a093-5685bb5ad696.png align="center")
 
-* * *
+---
 
 ## Additional (Neovim Keymap Guide)
 
@@ -427,7 +543,7 @@ You will get a final look like this :
 | `:q` | Quit | Actually quits **all windows** (because of abbreviation) |
 | `:wq` | Save and quit | Saves everything then exits |
 
-❗**Important:**  
+❗**Important:**\
 In this config:
 
 `q` becomes `qa`
@@ -438,8 +554,8 @@ So typing `:q` quits all. So, do Ctrl + s before typing :q if you want to save t
 
 | Key | What it does |
 | --- | --- |
-| `Alt + J` | Next file |
-| `Alt + K` | Previous file |
+| space + tab | Next file |
+| space + (0-9) | switch between files |
 | `Space + q` | Close current file |
 
 ### 🔳 Window Navigation (Split Screens)
@@ -455,10 +571,8 @@ Move between split windows.
 
 Works in:
 
-*   Normal mode
-    
-*   Terminal mode
-    
+- Normal mode
+- Terminal mode
 
 ### 💻 Terminal
 
@@ -523,6 +637,14 @@ These work while typing.
 | v | To go into visual mode press v and you can use the arrows to select multiple lines |
 | `Ctrl + S` | Save while keeping selection |
 
+### Split-View Shortcuts Added
+
+- **Vertical split (side-by-side):** `<leader>sv` (`Space` + `s` + `v`) — opens a new vertical split; in `nvim-tree`, press `v` on a file to open it in a vertical split.
+- **Horizontal split (top/bottom):** `<leader>sh` (`Space` + `s` + `h`) — opens a new horizontal split; in `nvim-tree`, press `x` on a file to open it in a horizontal split.
+- **Open current buffer in a split:** `<leader>sb` (`Space` + `s` + `b`) — splits vertically and switches to the next buffer so you can view two files side by side quickly.
+- **Resize splits:** `<leader>s=` (`Space` + `s` + `=`) equalizes split sizes; `<leader>s>` / `<leader>s<` widens/narrows vertical splits (`<C-w>>` / `<C-w><` also work natively).
+- **Close current split pane:** `<leader>sc` (`Space` + `s` + `c`) or `<C-w>c`.
+
 ### 🖱 Mouse Support
 
 This config has:
@@ -531,14 +653,11 @@ This config has:
 
 So you can:
 
-*   Click to move cursor
-    
-*   Scroll
-    
-*   Resize splits
-    
+- Click to move cursor
+- Scroll
+- Resize splits
 
-* * *
+---
 
 That was all. Thanks for reading so far. You can also subscribe to my newsletter visiting the following link:
 
